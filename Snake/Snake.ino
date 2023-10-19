@@ -2,6 +2,7 @@ const int latchPin = 12;
 const int clockPin = 13;
 const int dataPin = 11;
 const int LEDPin[] = {2, 3, 4, 5, 6, 7, 8, 9};
+uint8_t interval = 0;
 
 byte screenBuffer[] = {
     0b10000000, 0b01000000,
@@ -20,7 +21,19 @@ void setup(){
 }
 
 void loop(){
+    interval ++;
     displayOnMatrix(screenBuffer);
+    if(interval % 50 == 0)
+        wave();
+}
+
+void wave(){
+    for(auto &a : screenBuffer){
+        a <<= 1;
+        if(a == NULL){
+            a = 0x1;
+        }
+    }
 }
 
 void displayOnMatrix(byte screenBuffer[]){
