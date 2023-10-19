@@ -1,25 +1,26 @@
 #include "dotMatrix.h"
 
-const int latchPin = 12;
-const int clockPin = 13;
-const int dataPin = 11;
-const uint8_t LEDPin[] = {2, 3, 4, 5, 6, 7, 8, 9};
+/* 
+Everything about the dotMatrix screen is handled by dotMatrix.h
+*/
+
 uint8_t interval = 0;
 
+//screenbuffer already setup in an angle for the wave to properly work
 byte screenBuffer[] = {
-    0b10000000, 0b01000000,
-    0b00100000, 0b00010000,
-    0b00001000, 0b00000100,
-    0b00000010, 0b00000001
+    0x80, 0x40,
+    0x20, 0x10,
+    0x8, 0x4,
+    0x2, 0x1
 };
 
 void setup(){
-    dotMatrix::setup(latchPin, clockPin, dataPin, LEDPin);
+    dotMatrix::setup();
 }
 
 void loop(){
     interval ++;
-    dotMatrix::displayOnMatrix(screenBuffer, LEDPin, latchPin, clockPin, dataPin);
+    dotMatrix::displayOnMatrix(screenBuffer);
     if(interval % 20 == 0)
         wave();
 }
