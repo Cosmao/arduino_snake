@@ -50,6 +50,7 @@ void setup(const uint8_t latchPin,
     }
 }
 
+//using the DotMatrixDefault
 void setup(){
     pinMode(latchPin, OUTPUT);
     pinMode(clockPin, OUTPUT);
@@ -74,6 +75,7 @@ void displayOnMatrix(byte screenBuffer[8],
     }
 }
 
+//DotMatixDefault pins
 void displayOnMatrix(byte screenBuffer[8]){
     int cols = 0x01;
     for(int i = 0; i < 8; i++){
@@ -94,6 +96,7 @@ void matrixCol(byte value, const uint8_t LEDPin[]){
     }
 }
 
+//DotMatrixDefault column handling
 void matrixCol(byte value){
     byte cols = 0x01;
     for(int i = 0; i < 8; i++){
@@ -110,6 +113,7 @@ void matrixRows(byte value, int latchPin, int clockPin, int dataPin){
     digitalWrite(latchPin, HIGH);
 }
 
+//DotMatrixDefault row handling
 void matrixRows(byte value){
     digitalWrite(latchPin, LOW);
     shiftOut(dataPin, clockPin, LSBFIRST, value);
