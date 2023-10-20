@@ -2,9 +2,8 @@
 
 /* 
 TODO Add apples to make it grow
-TODO Collision detection, go around other side?
-TODO make you lose somehow
-TODO use the cleanup function to properly free the tail
+TODO Collision detection for hitting the player
+TODO Consider if I want to loop around or no
  */
 
 //Some defines for clearer code
