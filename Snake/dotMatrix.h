@@ -36,6 +36,7 @@ void matrixCol(byte value, const uint8_t LEDPin[]);
 void matrixCol(byte value);
 void matrixRows(byte value, int latchPin, int dataPin, int clockPin);
 void matrixRows(byte value);
+void wave();
 
 //Sets up all pins for output mode
 void setup(const uint8_t latchPin, 
@@ -118,6 +119,33 @@ void matrixRows(byte value){
     digitalWrite(latchPin, LOW);
     shiftOut(dataPin, clockPin, LSBFIRST, value);
     digitalWrite(latchPin, HIGH);
+}
+
+//for the animation
+void wave(int delayInMsec){
+    byte waveBuffer[8] = {
+        0x80, 0x40,
+        0x20, 0x10,
+        0x08, 0x04,
+        0x02, 0x01
+    };
+    while(true){
+
+        for(auto &a : waveBuffer){
+            if((a & 0x80) == 0x80){
+                a <<= 1;
+                a++;
+            }
+            else{
+                a <<= 1;
+            }
+            if(a == 0){
+                a = 0x1;
+            }
+        }
+        displayOnMatrix(waveBuffer);
+        delay(delayInMsec);
+    }
 }
 
 }
