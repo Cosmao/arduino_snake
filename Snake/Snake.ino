@@ -27,14 +27,14 @@ struct position{
 
 //Basic struct, I probably want to link them together and iterate util a nullPTR
 struct snakePart : position{
-    snakePart *nextPartPtr;
+    snakePart* nextPartPtr;
 };
 
 //extend the base struct with some extra features needed for head
 struct snakeHead : snakePart{
     bool addPartOnMove;
     uint8_t direction;
-    snakePart *endPartPtr;
+    snakePart* endPartPtr;
 };
 
 //Our "player" and apple
@@ -72,7 +72,7 @@ void loop(){
 //512 avg
 //Sets the directions
 //TODO another pass on this function, kinda dirty
-void setDirection(snakeHead &snake){
+void setDirection(snakeHead& snake){
     int xVal, yVal, zVal;           //TODO remove zVal once apples are here
     xVal = analogRead(xAxisPin);
     yVal = analogRead(yAxisPin);
@@ -96,7 +96,7 @@ void setDirection(snakeHead &snake){
 }
 
 //moves depending on the direction set
-void move(snakeHead &snake){
+void move(snakeHead& snake){
     if(snake.addPartOnMove == true)
         addPart(snake);
     
@@ -139,12 +139,12 @@ void move(snakeHead &snake){
 //I can just check the screenBuffer after its made for the bit I'm void setup()
 //Might come with some other issues if I do it like that, cheap though
 //screenBuffer[snake.x] byte on pos y = snake.y
-void collisionDetect(snakeHead &snake){
+void collisionDetect(snakeHead& snake){
 
 }
 
 //Resets the game
-void cleanUp(snakeHead &snake){
+void cleanUp(snakeHead& snake){
     clearSnakeTail(snake);
     snake.x = 4;
     snake.y = 4;
@@ -155,14 +155,14 @@ void cleanUp(snakeHead &snake){
 }
 
 //moves across the pointers to move all snake pieces
-void moveSnakePieces(snakePart &snakePiece, uint8_t x, uint8_t y){
-    snakePart *snakePartPtr = snakePiece.nextPartPtr; //get next part
+void moveSnakePieces(snakePart& snakePiece, uint8_t x, uint8_t y){
+    snakePart* snakePartPtr = snakePiece.nextPartPtr; //get next part
     if(snakePartPtr != nullptr){                     //we arent the last part
         uint8_t curX = snakePiece.x;                //save our positions
         uint8_t curY = snakePiece.y;
         snakePiece.x = x;                           //update to the previous ones
         snakePiece.y = y;
-        moveSnakePieces(*snakePartPtr, curX, curY); //go again
+        moveSnakePieces(*snakePartPtr, curX, curY); //recursive function to handle the entire tail (memory limits?)
     }
     else{
         if(!myHead.addPartOnMove){ //if we just added one leave it where it is
@@ -173,20 +173,20 @@ void moveSnakePieces(snakePart &snakePiece, uint8_t x, uint8_t y){
 }
 
 //updates the screenBuffer with the position of everything
-void updateScreenBuffer(snakeHead &snake){
+void updateScreenBuffer(snakeHead& snake){
     for(auto &i : screenBuffer){ //clean the screenBuffer
         i = 0x00;
     }
     screenBuffer[snake.x] = snake.y; //Insert head, simple equal works since its first added
 
-    snakePart *snakePartPtr = snake.nextPartPtr;        //get ptr for first part
+    snakePart* snakePartPtr = snake.nextPartPtr;        //get ptr for first part
     while(snakePartPtr != nullptr){                     //end at nullptr, otherwise iterate over all pieces
         screenBuffer[snakePartPtr->x] = screenBuffer[snakePartPtr->x] | snakePartPtr->y; //bitwise OR so we can handle several pieces on a column
         snakePartPtr = snakePartPtr->nextPartPtr;       //set the ptr to next part
     }
 }
 
-void addPart(snakeHead &snake){
+void addPart(snakeHead& snake){
     if(snake.nextPartPtr == nullptr){       //Only runs as first piece is created
         snakePart* snakePiece = (snakePart*) malloc(sizeof(snakePart)); //malloc returns a void * so we need to cast it to a ptr for our struct
         if(snakePiece == nullptr){          //malloc returns a nullptr if no space to allocate
@@ -217,10 +217,10 @@ void addPart(snakeHead &snake){
     }
 }
 
-void clearSnakeTail(snakeHead &snake){
-    snakePart *snakePartPtr = snake.nextPartPtr;
+void clearSnakeTail(snakeHead& snake){
+    snakePart* snakePartPtr = snake.nextPartPtr;
     while(snakePartPtr != nullptr){                 //end at nullptr, otherwise iterate over all pieces
-        snakePart *tempPtr = snakePartPtr;          //save current piece in a temp pointer
+        snakePart* tempPtr = snakePartPtr;          //save current piece in a temp pointer
         snakePartPtr = snakePartPtr->nextPartPtr;   //Get the next piece
         free(tempPtr);                              //free the current one when we have the next
     }
