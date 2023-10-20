@@ -1,10 +1,10 @@
 #include "dotMatrix.h"
 
 /* 
-TODO Add growing snake
 TODO Add apples to make it grow
 TODO Collision detection, go around other side?
 TODO make you lose somehow
+TODO use the cleanup function to properly free the tail
  */
 
 #define up 0x00
@@ -95,12 +95,10 @@ void setDirection(snakeHead &snake){
 //moves depending on the direction set
 void move(snakeHead &snake){
     if(snake.addPartOnMove == true){
-        /* snakeArray[0].x = snake.x;
-        snakeArray[0].y = snake.y; */
         addPart(snake);
     }
     moveSnakePieces(*snake.nextPartPtr, snake.x, snake.y); //update pieces before head
-    switch(snake.direction){
+    switch(snake.direction){ //directions are kinda fucked since I started doing this with the angle on the joystick was odd
         case left:
             if(snake.x != 7)
                 snake.x++;
@@ -157,11 +155,6 @@ void updateScreenBuffer(snakeHead &snake){
     }
 }
 
-void updatePartPos(snakePart &part, uint8_t x, uint8_t y){
-    part.x = x;
-    part.y = y;
-}
-
 //Moves everything to the left and makes it reappear on the right side when it reaches the end
 void wave(){
     for(auto &a : screenBuffer){
@@ -180,9 +173,9 @@ void wave(){
 
 void addPart(snakeHead &snake){
     if(snake.nextPartPtr == nullptr){
-        snakePart* snakePiece = (snakePart*) malloc(sizeof(snakePart));
+        snakePart* snakePiece = (snakePart*) malloc(sizeof(snakePart)); //malloc returns a void * so we need to cast to our struct
         if(snakePiece == nullptr){      //malloc returns a nullptr if no space to allocate
-            Serial.println(F("MEM FULL"));
+            Serial.println(F("MEM FULL")); //F() turns it into a string literal
         }
         else{       //update pointers and take the heads position, wont move last dot on the tick its created
             snake.nextPartPtr = snakePiece;
@@ -207,10 +200,10 @@ void addPart(snakeHead &snake){
 
 void clearSnakeTail(snakeHead &snake){
     snakePart *snakePartPtr = snake.nextPartPtr;
-    while(snakePartPtr != nullptr){ //end at nullptr, otherwise iterate over all pieces
-        snakePart *tempPtr = snakePartPtr;
-        snakePartPtr = snakePartPtr->nextPartPtr;
-        free(tempPtr);
+    while(snakePartPtr != nullptr){                 //end at nullptr, otherwise iterate over all pieces
+        snakePart *tempPtr = snakePartPtr;          //save current piece in a temp pointer
+        snakePartPtr = snakePartPtr->nextPartPtr;   //Get the next piece
+        free(tempPtr);                              //free the current one when we have the next
     }
-    free(snakePartPtr);
+    free(snakePartPtr);                             //free the last piece and end func
 }
