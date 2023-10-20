@@ -19,10 +19,14 @@ const int yAxisPin = 1;
 const int zAxisPin = 10;    //TODO remove once apples are here
 int limiter = 0;
 
-//Basic struct, I probably want to link them together and iterate util a nullPTR
-struct snakePart{
+//Only used for the apple
+struct position{
     uint8_t x;
     uint8_t y;
+};
+
+//Basic struct, I probably want to link them together and iterate util a nullPTR
+struct snakePart : position{
     snakePart *nextPartPtr;
 };
 
@@ -33,8 +37,9 @@ struct snakeHead : snakePart{
     snakePart *endPartPtr;
 };
 
-//Our "player"
+//Our "player" and apple
 snakeHead myHead;
+position apple;
 
 //empty screenBuffer
 //column by column
@@ -50,6 +55,7 @@ void setup(){
     pinMode(zAxisPin, INPUT_PULLUP);    //TODO remove once apples are here
     Serial.begin(9600);
     cleanUp(myHead);                    //just running the cleanup func to init to remove code duplication
+    randomSeed(analogRead(2));
 }
 
 void loop(){
@@ -130,6 +136,9 @@ void move(snakeHead &snake){
 }
 
 //TODO implement, run after moving head
+//I can just check the screenBuffer after its made for the bit I'm void setup()
+//Might come with some other issues if I do it like that, cheap though
+//screenBuffer[snake.x] byte on pos y = snake.y
 void collisionDetect(snakeHead &snake){
 
 }
