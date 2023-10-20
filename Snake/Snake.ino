@@ -178,22 +178,6 @@ void updateScreenBuffer(snakeHead &snake){
     }
 }
 
-//Moves everything to the left and makes it reappear on the right side when it reaches the end
-void wave(){
-    for(auto &a : screenBuffer){
-        if((a & 0x80) == 0x80){
-            a <<= 1;
-            a++;
-        }
-        else{
-            a <<= 1;
-        }
-        if(a == 0){
-            a = 0x1;
-        }
-    }
-}
-
 void addPart(snakeHead &snake){
     if(snake.nextPartPtr == nullptr){
         snakePart* snakePiece = (snakePart*) malloc(sizeof(snakePart)); //malloc returns a void * so we need to cast to our struct
