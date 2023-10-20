@@ -25,8 +25,6 @@ struct snakePart{
     snakePart *nextPartPtr;
 };
 
-//snakePart snakeArray[64];
-
 struct snakeHead : snakePart{
     bool addPartOnMove;
     uint8_t direction;
@@ -48,12 +46,12 @@ void setup(){
     dotMatrix::setup();
     pinMode(zAxisPin, INPUT_PULLUP);
     Serial.begin(9600);
+    myHead.direction = 0x00;
     myHead.x = 4;
     myHead.y = 4;
-    myHead.direction = 0x00;
-    myHead.nextPartPtr = nullptr;
-    myHead.endPartPtr = nullptr;
     myHead.addPartOnMove = false;
+    myHead.endPartPtr = nullptr;
+    myHead.nextPartPtr = nullptr;
 }
 
 void loop(){
@@ -94,31 +92,56 @@ void setDirection(snakeHead &snake){
 
 //moves depending on the direction set
 void move(snakeHead &snake){
-    if(snake.addPartOnMove == true){
+    if(snake.addPartOnMove == true)
         addPart(snake);
-    }
-    moveSnakePieces(*snake.nextPartPtr, snake.x, snake.y); //update pieces before head
+    
+    if(snake.nextPartPtr != nullptr)
+        moveSnakePieces(*snake.nextPartPtr, snake.x, snake.y); //update pieces before head
+
     switch(snake.direction){ //directions are kinda fucked since I started doing this with the angle on the joystick was odd
         case left:
             if(snake.x != 7)
                 snake.x++;
+            else
+                cleanUp(snake);
         break;
 
         case right:
             if(snake.x != 0)
                 snake.x--;
+            else
+                cleanUp(snake);
         break;
 
         case up:
             if(snake.y !=0x01)
                 snake.y >>= 1;
+            else
+                cleanUp(snake);
         break;
         
         case down:
             if(snake.y !=0x80)
                 snake.y <<= 1;
+            else
+                cleanUp(snake);
         break;
     }
+    snake.addPartOnMove = false;
+}
+
+void collisionDetect(snakeHead &snake){
+
+}
+
+//Resets the game
+void cleanUp(snakeHead &snake){
+    clearSnakeTail(snake);
+    snake.x = 4;
+    snake.y = 4;
+    snake.direction = 0x00;
+    snake.nextPartPtr = nullptr;
+    snake.endPartPtr = nullptr;
     snake.addPartOnMove = false;
 }
 
@@ -182,6 +205,7 @@ void addPart(snakeHead &snake){
             snake.endPartPtr = snakePiece;
             snakePiece->x = snake.x;
             snakePiece->y = snake.y;
+            snakePiece->nextPartPtr = nullptr;
         }
     }
     else{
@@ -192,6 +216,7 @@ void addPart(snakeHead &snake){
         else{
             snakePiece->x = snake.endPartPtr->x;             //Take the positions of the last element
             snakePiece->y = snake.endPartPtr->y;
+            snakePiece->nextPartPtr = nullptr;
             snake.endPartPtr->nextPartPtr = snakePiece;     //endpointer pointing towards last piece set that pointer to the new piece
             snake.endPartPtr = snakePiece;                  //set as new last piece
         }
