@@ -126,17 +126,17 @@ void move(snakeHead& snake){
         break;
     }
 
-    snake.addPartOnMove = false;
+    snake.addPartOnMove = eatApple(apple, snake);
 
-    if(collisionDetect(snake))
+    if(collisionDetect(snake, snake.xPos, snake.yPos))
         cleanUp(snake);
 }
 
-//Somewhat expensive way of doing it, compares every single snake piece with head
-bool collisionDetect(snakeHead& snake){
+//Somewhat expensive way of doing it, compares every single snake piece with a position
+bool collisionDetect(snakeHead& snake, uint8_t xPos, uint8_t yPos){
     snakePart* snakePartPtr = snake.nextPartPtr;
     while(snakePartPtr != nullptr){
-        if(snakePartPtr->yPos == snake.yPos && snakePartPtr->xPos == snake.xPos)
+        if(snakePartPtr->yPos == yPos && snakePartPtr->xPos == xPos)
             return true;
         snakePartPtr = snakePartPtr->nextPartPtr;
     }
@@ -152,6 +152,8 @@ void cleanUp(snakeHead& snake){
     snake.nextPartPtr = nullptr;
     snake.endPartPtr = nullptr;
     snake.addPartOnMove = false;
+    randomSeed(analogRead(A5));
+    placeApple(apple, snake);
 }
 
 //moves across the pointers to move all snake pieces
@@ -178,13 +180,18 @@ void updateScreenBuffer(snakeHead& snake){
         i = 0x00;
     }
 
+    //head
     screenBuffer[snake.xPos] = snake.yPos;
 
+    //snake
     snakePart* snakePartPtr = snake.nextPartPtr;        //get ptr for first part
     while(snakePartPtr != nullptr){                     //end at nullptr, otherwise iterate over all pieces
         screenBuffer[snakePartPtr->xPos] = screenBuffer[snakePartPtr->xPos] | snakePartPtr->yPos; //bitwise OR so we can handle several pieces on a column
         snakePartPtr = snakePartPtr->nextPartPtr;       //set the ptr to next part
     }
+
+    //apple
+    screenBuffer[apple.xPos] = screenBuffer[apple.xPos] | apple.yPos;
 }
 
 void addPart(snakeHead& snake){
@@ -226,4 +233,25 @@ void clearSnakeTail(snakeHead& snake){
         free(tempPtr);                              //free the current one when we have the next
     }
     free(snakePartPtr);                             //free the last piece and end func
+}
+
+//might be expensive to run, idk about randoms, potentially infinite loop as well if unlucky
+void placeApple(position& apple, snakeHead& snake){
+    apple.xPos = static_cast<uint8_t>(random(8));
+    //yPos is a multiple of 2 so we need some leftshift action
+    uint8_t leftShiftTimes = static_cast<uint8_t>(random(8));
+    uint8_t yPos = 1;
+    for(int i = 0; i < leftShiftTimes; i++)
+        yPos <<= 1;
+    apple.yPos = yPos;
+    if(collisionDetect(snake, apple.xPos, apple.yPos))
+        placeApple(apple, snake);
+}
+
+bool eatApple(position& apple, snakeHead& snake){
+    if(apple.xPos == snake.xPos && apple.yPos == snake.yPos){
+        placeApple(apple, snake);
+        return true;
+    }
+    return false;
 }
