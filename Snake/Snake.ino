@@ -2,7 +2,6 @@
 
 /* 
 TODO Add apples to make it grow
-TODO Collision detection for hitting the player
 TODO Consider if I want to loop around or no
  */
 
@@ -21,16 +20,15 @@ int limiter = 0;
 
 //Only used for the apple
 struct position{
-    uint8_t x;
-    uint8_t y;
+    uint8_t xPos;
+    uint8_t yPos;
 };
 
-//Basic struct, I probably want to link them together and iterate util a nullPTR
 struct snakePart : position{
     snakePart* nextPartPtr;
 };
 
-//extend the base struct with some extra features needed for head
+//extend the snake struct with some extra features needed for head
 struct snakeHead : snakePart{
     bool addPartOnMove;
     uint8_t direction;
@@ -43,12 +41,7 @@ position apple;
 
 //empty screenBuffer
 //column by column
-byte screenBuffer[] = {
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x00,
-    0x00, 0x00
-};
+byte screenBuffer[8];
 
 void setup(){
     dotMatrix::setup();
@@ -101,53 +94,60 @@ void move(snakeHead& snake){
         addPart(snake);
     
     if(snake.nextPartPtr != nullptr)
-        moveSnakePieces(*snake.nextPartPtr, snake.x, snake.y); //update pieces before head
+        moveSnakePieces(*snake.nextPartPtr, snake.xPos, snake.yPos); //update pieces before head
 
     switch(snake.direction){ //directions are kinda fucked since I started doing this with the angle on the joystick was odd
         case left:
-            if(snake.x != 7)
-                snake.x++;
+            if(snake.xPos != 7)
+                snake.xPos++;
             else
                 cleanUp(snake);
         break;
 
         case right:
-            if(snake.x != 0)
-                snake.x--;
+            if(snake.xPos != 0)
+                snake.xPos--;
             else
                 cleanUp(snake);
         break;
 
         case up:
-            if(snake.y !=0x01)
-                snake.y >>= 1;
+            if(snake.yPos !=0x01)
+                snake.yPos >>= 1;
             else
                 cleanUp(snake);
         break;
         
         case down:
-            if(snake.y !=0x80)
-                snake.y <<= 1;
+            if(snake.yPos !=0x80)
+                snake.yPos <<= 1;
             else
                 cleanUp(snake);
         break;
     }
+
     snake.addPartOnMove = false;
+
+    if(collisionDetect(snake))
+        cleanUp(snake);
 }
 
-//TODO implement, run after moving head
-//I can just check the screenBuffer after its made for the bit I'm void setup()
-//Might come with some other issues if I do it like that, cheap though
-//screenBuffer[snake.x] byte on pos y = snake.y
-void collisionDetect(snakeHead& snake){
-
+//Somewhat expensive way of doing it, compares every single snake piece with head
+bool collisionDetect(snakeHead& snake){
+    snakePart* snakePartPtr = snake.nextPartPtr;
+    while(snakePartPtr != nullptr){
+        if(snakePartPtr->yPos == snake.yPos && snakePartPtr->xPos == snake.xPos)
+            return true;
+        snakePartPtr = snakePartPtr->nextPartPtr;
+    }
+    return false;
 }
 
 //Resets the game
 void cleanUp(snakeHead& snake){
     clearSnakeTail(snake);
-    snake.x = 4;
-    snake.y = 4;
+    snake.xPos = 4;
+    snake.yPos = 4;
     snake.direction = down;
     snake.nextPartPtr = nullptr;
     snake.endPartPtr = nullptr;
@@ -155,19 +155,19 @@ void cleanUp(snakeHead& snake){
 }
 
 //moves across the pointers to move all snake pieces
-void moveSnakePieces(snakePart& snakePiece, uint8_t x, uint8_t y){
+void moveSnakePieces(snakePart& snakePiece, uint8_t xPos, uint8_t yPos){
     snakePart* snakePartPtr = snakePiece.nextPartPtr; //get next part
     if(snakePartPtr != nullptr){                     //we arent the last part
-        uint8_t curX = snakePiece.x;                //save our positions
-        uint8_t curY = snakePiece.y;
-        snakePiece.x = x;                           //update to the previous ones
-        snakePiece.y = y;
+        uint8_t curX = snakePiece.xPos;                //save our positions
+        uint8_t curY = snakePiece.yPos;
+        snakePiece.xPos = xPos;                           //update to the previous ones
+        snakePiece.yPos = yPos;
         moveSnakePieces(*snakePartPtr, curX, curY); //recursive function to handle the entire tail (memory limits?)
     }
     else{
         if(!myHead.addPartOnMove){ //if we just added one leave it where it is
-            snakePiece.x = x;
-            snakePiece.y = y;
+            snakePiece.xPos = xPos;
+            snakePiece.yPos = yPos;
         }
     }
 }
@@ -177,11 +177,12 @@ void updateScreenBuffer(snakeHead& snake){
     for(auto &i : screenBuffer){ //clean the screenBuffer
         i = 0x00;
     }
-    screenBuffer[snake.x] = snake.y; //Insert head, simple equal works since its first added
+
+    screenBuffer[snake.xPos] = snake.yPos;
 
     snakePart* snakePartPtr = snake.nextPartPtr;        //get ptr for first part
     while(snakePartPtr != nullptr){                     //end at nullptr, otherwise iterate over all pieces
-        screenBuffer[snakePartPtr->x] = screenBuffer[snakePartPtr->x] | snakePartPtr->y; //bitwise OR so we can handle several pieces on a column
+        screenBuffer[snakePartPtr->xPos] = screenBuffer[snakePartPtr->xPos] | snakePartPtr->yPos; //bitwise OR so we can handle several pieces on a column
         snakePartPtr = snakePartPtr->nextPartPtr;       //set the ptr to next part
     }
 }
@@ -196,8 +197,8 @@ void addPart(snakeHead& snake){
         else{       //update pointers and take the heads position, wont move last dot on the tick its created
             snake.nextPartPtr = snakePiece;
             snake.endPartPtr = snakePiece;
-            snakePiece->x = snake.x;
-            snakePiece->y = snake.y;
+            snakePiece->xPos = snake.xPos;
+            snakePiece->yPos = snake.yPos;
             snakePiece->nextPartPtr = nullptr;              //making sure its a nullptr for other logic
         }
     }
@@ -208,8 +209,8 @@ void addPart(snakeHead& snake){
             cleanUp(snake);                 //malloc failed so we reset game (Should never happen)
         }
         else{
-            snakePiece->x = snake.endPartPtr->x;            //Take the positions of the last element
-            snakePiece->y = snake.endPartPtr->y;
+            snakePiece->xPos = snake.endPartPtr->xPos;            //Take the positions of the last element
+            snakePiece->yPos = snake.endPartPtr->yPos;
             snakePiece->nextPartPtr = nullptr;              //set the next piece as a nullptr since we are last
             snake.endPartPtr->nextPartPtr = snakePiece;     //endpointer pointing towards last piece set that pointer to the new piece
             snake.endPartPtr = snakePiece;                  //set as new last piece
