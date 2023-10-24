@@ -1,7 +1,6 @@
 #include "dotMatrix.h"
 
 /* 
-TODO Add apples to make it grow
 TODO Consider if I want to loop around or no
  */
 
@@ -15,7 +14,6 @@ TODO Consider if I want to loop around or no
 //Joystick pins
 const int xAxisPin = 0;
 const int yAxisPin = 1;
-const int zAxisPin = 10;    //TODO remove once apples are here
 int limiter = 0;
 
 //Only used for the apple
@@ -45,7 +43,6 @@ byte screenBuffer[8];
 
 void setup(){
     dotMatrix::setup();
-    pinMode(zAxisPin, INPUT_PULLUP);    //TODO remove once apples are here
     Serial.begin(9600);
     cleanUp(myHead);                    //just running the cleanup func to init to remove code duplication
     randomSeed(analogRead(2));
@@ -66,13 +63,9 @@ void loop(){
 //Sets the directions
 //TODO another pass on this function, kinda dirty
 void setDirection(snakeHead& snake){
-    int xVal, yVal, zVal;           //TODO remove zVal once apples are here
+    int xVal, yVal;
     xVal = analogRead(xAxisPin);
     yVal = analogRead(yAxisPin);
-    zVal = digitalRead(zAxisPin);   //TODO remove once apples are here
-
-    if(zVal == 0)                   //TODO remove once apples are here
-        snake.addPartOnMove = true;
 
     if(xVal < 100)
         snake.direction = left;
